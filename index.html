@@ -32,7 +32,7 @@ document.getElementById("myCanvas").style.background = 'black';
 var path = new Path();
 // Give the stroke a color
 path.strokeColor = 'red';
-var x = 100;
+var x = 300;
 var y = 100;
 var start = new Point(x, y);
 // Move to start and draw a line from there
@@ -65,10 +65,14 @@ function buildSquarePiece(blist) {
 }
 var curPiece = buildSquarePiece(blist);
 
-function onFrame(event) {
+function rotateLine() {
 //    Each framesetcols, rotate the path by 3 degrees:
     path.rotate(rotationRate);
 //    path.fillColor.hue += 1;
+}
+
+function onFrame(event) {
+    rotateLine();
     if (Key.isDown('q')) {
         x =  x-1;
     }
@@ -77,11 +81,12 @@ function onFrame(event) {
     }
     start = new Point(x, y);
     path.position = start;
+    date = new Date();
     var now = date.getTime();
     if ((now - lastTime) > 1000) {
-        lastTime = now(); 
+        lastTime = now; 
         for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-            blist[i]. x = blist[i].x +9;
+            blist[i].position.y=blist[i].position.y + 9;
         }
         lastTime = now;
     }
