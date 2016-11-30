@@ -47,21 +47,63 @@ var blist = new Array();
 var date = new Date();
 var lastTime = date.getTime();
 
+var pieceIdx=0;
 
 function Piece () {
     this.bstart=0;
-    this.bend=3;
+    this.bend=4;
 }
 function buildSquarePiece(blist) {
+    var np = new Piece();
+    np.bstart = pieceIdx;
     blist.push(new Path.Rectangle(10,1, 9,9));
-    blist[0].fillColor = 'red';
+    blist[pieceIdx].fillColor = 'red';
+    pieceIdx = pieceIdx+1;
     blist.push(new Path.Rectangle(10+9,1, 9,9));
-    blist[1].fillColor = 'red';
+    blist[pieceIdx].fillColor = 'red';
+    pieceIdx = pieceIdx+1;
     blist.push(new Path.Rectangle(10,1+9, 9,9));
-    blist[2].fillColor = 'red';
+    blist[pieceIdx].fillColor = 'red';
+    pieceIdx = pieceIdx+1;
     blist.push(new Path.Rectangle(10+9,1+9, 9,9));
-    blist[3].fillColor = 'red';
-    return new Piece();
+    blist[pieceIdx].fillColor = 'red';
+    pieceIdx = pieceIdx+1;
+    np.bend = pieceIdx; 
+    return np;
+}
+function pieceToLeft(curPiece) {
+    for (var i = curPiece.bstart; i < curPiece.bend; i++) {
+       if (14.5 ==  blist[i].position.x) {
+         return true;
+       }
+    }
+    return false;
+}
+function pieceToRight(curPiece) {
+    for (var i = curPiece.bstart; i < curPiece.bend; i++) {
+       if (86.5 ==  blist[i].position.x) {
+         return true;
+       }
+    }
+    return false;
+}
+function pieceToBottom(curPiece) {
+    for (var i = curPiece.bstart; i < curPiece.bend; i++) {
+       if (239.5 ==  blist[i].position.y) {
+         return true;
+       }
+    }
+    return false;
+}
+function movePieceHorrizontal(curPiece, q) {
+    for (var i = curPiece.bstart; i < curPiece.bend; i++) {
+       blist[i].position.x=blist[i].position.x + q;
+    }
+}
+function movePieceVertical(curPiece, q) {
+    for (var i = curPiece.bstart; i < curPiece.bend; i++) {
+       blist[i].position.y=blist[i].position.y + q;
+    }
 }
 var curPiece = buildSquarePiece(blist);
 
@@ -70,9 +112,13 @@ function rotateLine() {
     path.rotate(rotationRate);
 //    path.fillColor.hue += 1;
 }
-
+var readKeyTimeout =  0;
 function onFrame(event) {
     rotateLine();
+
+    date = new Date();
+    var now = date.getTime();
+
     if (Key.isDown('q')) {
         x =  x-1;
     }
@@ -81,12 +127,31 @@ function onFrame(event) {
     }
     start = new Point(x, y);
     path.position = start;
-    date = new Date();
-    var now = date.getTime();
+
+    if (Key.isDown('d')) {
+	if (!pieceToRight(curPiece) && (now- readKeyTimeout) > 150) { 
+	    movePieceHorrizontal(curPiece, 9);
+	    readKeyTimeout = now;
+	}
+    }
+    if (Key.isDown('a')) {
+	if (!pieceToLeft(curPiece) && (now- readKeyTimeout) > 150) {
+	    movePieceHorrizontal(curPiece, -9);
+	    readKeyTimeout = now;
+	} 
+    }
+    if (Key.isDown('s')) {
+	if (!pieceToBottom(curPiece) && (now- readKeyTimeout) > 150) {
+	    movePieceVertical(curPiece, 9);
+	    readKeyTimeout = now;
+	} 
+    }
     if ((now - lastTime) > 1000) {
-        lastTime = now; 
-        for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-            blist[i].position.y=blist[i].position.y + 9;
+	if (pieceToBottom(curPiece)) { 
+		curPiece = buildSquarePiece(blist);
+        }
+        else { 
+	    movePieceVertical(curPiece, 9);
         }
         lastTime = now;
     }
