@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html>
     <head>
+    <style>
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+
+}
+canvas {
+    background: #CCC;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+
+}
+    </style>
+    </style>
         <!-- Load the Paper.js library -->
         <script type="text/javascript" src="js/paper-full.js"></script>
         <!-- Load external PaperScript and associate it with myCanvas -->
@@ -19,22 +41,50 @@ path.moveTo(start);
 // PaperScript does that for us, and much more!
 path.lineTo(start + [ 100, -50 ]);
 var rotationRate = 3;
+var gameBoard = new Path.Rectangle(10,1, 9*9,9*9*3);
+gameBoard.fillColor = 'white';
+var blist = new Array();
+var date = new Date();
+var lastTime = date.getTime();
 
+
+function Piece () {
+    this.bstart=0;
+    this.bend=3;
+}
+function buildSquarePiece(blist) {
+    blist.push(new Path.Rectangle(10,1, 9,9));
+    blist[0].fillColor = 'red';
+    blist.push(new Path.Rectangle(10+9,1, 9,9));
+    blist[1].fillColor = 'red';
+    blist.push(new Path.Rectangle(10,1+9, 9,9));
+    blist[2].fillColor = 'red';
+    blist.push(new Path.Rectangle(10+9,1+9, 9,9));
+    blist[3].fillColor = 'red';
+    return new Piece();
+}
+var curPiece = buildSquarePiece(blist);
 
 function onFrame(event) {
-    // Each frame, rotate the path by 3 degrees:
-      path.rotate(rotationRate);
+//    Each framesetcols, rotate the path by 3 degrees:
+    path.rotate(rotationRate);
 //    path.fillColor.hue += 1;
-      if (Key.isDown('q')) {
-            x =  x-1;
-      }
-      if (Key.isDown('w')) {
-            x =  x+1;
-      }
-      start = new Point(x, y);
-      path.position = start;
-
-
+    if (Key.isDown('q')) {
+        x =  x-1;
+    }
+    if (Key.isDown('w')) {
+        x =  x+1;
+    }
+    start = new Point(x, y);
+    path.position = start;
+    var now = date.getTime();
+    if ((now - lastTime) > 1000) {
+        lastTime = now(); 
+        for (var i = curPiece.bstart; i < curPiece.bend; i++) {
+            blist[i]. x = blist[i].x +9;
+        }
+        lastTime = now;
+    }
 }
 function onKeyUp(event) {
      if (event.key == 'space') {
