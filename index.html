@@ -41,55 +41,92 @@ path.moveTo(start);
 // PaperScript does that for us, and much more!
 path.lineTo(start + [ 100, -50 ]);
 var rotationRate = 3;
-var gameBoard = new Path.Rectangle(10,1, 9*9,9*9*3);
+var blockWidth = 12; 
+var hs = 9;
+var vs = 9*3;
+var boardMatrix = new Array();
+
+for (var i =0; i < vs; i ++ ) {
+   boardMatrix[i] = new Array();
+   for (var j =0; j < hs; j ++ ) {
+       boardMatrix[i][j] = 0;
+   }
+} 
+
+var gameBoard = new Path.Rectangle(10,1, blockWidth*hs,blockWidth*vs);
 gameBoard.fillColor = 'white';
 var blist = new Array();
 var date = new Date();
 var lastTime = date.getTime();
 
-var pieceIdx=0;
+
+var bottomIdx= 239.5 ;
 
 function Piece () {
     this.bstart=0;
     this.bend=4;
 }
+
+
+
+function Block(x,y) {
+    this.x = x;
+    this.y = y;
+    this.obj = new Path.Rectangle(10+ x*blockWidth,1+ y*blockWidth,blockWidth,blockWidth);
+    this.obj.fillColor = 'red';
+} 
+Block.prototype.moveLeft = function (){
+	this.x--;
+	this.obj.position.x-=blockWidth;
+} 
+Block.prototype.moveRight = function (){
+	this.x++;
+	this.obj.position.x+=blockWidth;
+} 
+Block.prototype.moveDown= function (){
+	this.y++;
+	this.obj.position.y+=blockWidth;
+} 
+
+
+var pieceIdx=0;
+function addBlock(x,y) {
+    blist.push(new Block(x, y));
+    pieceIdx = pieceIdx+1;
+}
+
 function buildSquarePiece(blist) {
     var np = new Piece();
     np.bstart = pieceIdx;
-    blist.push(new Path.Rectangle(10,1, 9,9));
-    blist[pieceIdx].fillColor = 'red';
-    pieceIdx = pieceIdx+1;
-    blist.push(new Path.Rectangle(10+9,1, 9,9));
-    blist[pieceIdx].fillColor = 'red';
-    pieceIdx = pieceIdx+1;
-    blist.push(new Path.Rectangle(10,1+9, 9,9));
-    blist[pieceIdx].fillColor = 'red';
-    pieceIdx = pieceIdx+1;
-    blist.push(new Path.Rectangle(10+9,1+9, 9,9));
-    blist[pieceIdx].fillColor = 'red';
-    pieceIdx = pieceIdx+1;
+    addBlock(0,0);
+    addBlock(1,0);
+    addBlock(1,1);
+    addBlock(0,1);
     np.bend = pieceIdx; 
     return np;
 }
-function pieceToLeft(curPiece) {
+
+var leftIdx= 0 ;
+var rightIdx= 8 ;
+
+function pieceToHor(curPiece, idx) {
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       if (14.5 ==  blist[i].position.x) {
+       if (idx== blist[i].x) {
          return true;
        }
     }
     return false;
 }
+
+function pieceToLeft(curPiece) {
+    return pieceToHor(curPiece, leftIdx);
+}
 function pieceToRight(curPiece) {
-    for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       if (86.5 ==  blist[i].position.x) {
-         return true;
-       }
-    }
-    return false;
+    return pieceToHor(curPiece, rightIdx);
 }
 function pieceToBottom(curPiece) {
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       if (239.5 ==  blist[i].position.y) {
+       if (vs-1==  blist[i].y) {
          return true;
        }
     }
@@ -97,12 +134,12 @@ function pieceToBottom(curPiece) {
 }
 function movePieceHorrizontal(curPiece, q) {
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       blist[i].position.x=blist[i].position.x + q;
+       q >0  ? blist[i].moveRight() : blist[i].moveLeft();
     }
 }
-function movePieceVertical(curPiece, q) {
+function movePieceDown(curPiece) {
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       blist[i].position.y=blist[i].position.y + q;
+       blist[i].moveDown();
     }
 }
 var curPiece = buildSquarePiece(blist);
@@ -125,24 +162,26 @@ function onFrame(event) {
     if (Key.isDown('w')) {
         x =  x+1;
     }
+    document.getElementById('xCord').value = x;
+    document.getElementById('yCord').value = y;
     start = new Point(x, y);
     path.position = start;
 
     if (Key.isDown('d')) {
 	if (!pieceToRight(curPiece) && (now- readKeyTimeout) > 150) { 
-	    movePieceHorrizontal(curPiece, 9);
+	    movePieceHorrizontal(curPiece, blockWidth);
 	    readKeyTimeout = now;
 	}
     }
     if (Key.isDown('a')) {
 	if (!pieceToLeft(curPiece) && (now- readKeyTimeout) > 150) {
-	    movePieceHorrizontal(curPiece, -9);
+	    movePieceHorrizontal(curPiece, -blockWidth);
 	    readKeyTimeout = now;
 	} 
     }
     if (Key.isDown('s')) {
 	if (!pieceToBottom(curPiece) && (now- readKeyTimeout) > 150) {
-	    movePieceVertical(curPiece, 9);
+	    movePieceDown(curPiece);
 	    readKeyTimeout = now;
 	} 
     }
@@ -151,27 +190,17 @@ function onFrame(event) {
 		curPiece = buildSquarePiece(blist);
         }
         else { 
-	    movePieceVertical(curPiece, 9);
+	    movePieceDown(curPiece);
         }
         lastTime = now;
     }
 }
-function onKeyUp(event) {
-     if (event.key == 'space') {
-        }
-        if (event.key == 'z') {
-            rotationRate = rotationRate+1;
-        }
-        // Show stats:
-        if (event.key == 'x') {
-            rotationRate = rotationRate-1;
-        }
-    }
-
         </script>
     </head>
     <body>
         <canvas id="myCanvas" resize></canvas> </canvas>
+	<input id='xCord' size=60> 
+	<input id='yCord' size=60> 
     </body>
 </html>
 
