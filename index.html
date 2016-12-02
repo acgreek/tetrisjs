@@ -41,15 +41,15 @@ path.moveTo(start);
 // PaperScript does that for us, and much more!
 path.lineTo(start + [ 100, -50 ]);
 var rotationRate = 3;
-var blockWidth = 12; 
-var hs = 9;
-var vs = 9*3;
+var blockWidth = 18; 
+var hs = 3;
+var vs = 9*2;
 var boardMatrix = new Array();
 
 for (var i =0; i < vs; i ++ ) {
    boardMatrix[i] = new Array();
    for (var j =0; j < hs; j ++ ) {
-       boardMatrix[i][j] = 0;
+       boardMatrix[i][j] = null;
    }
 } 
 
@@ -59,15 +59,10 @@ var blist = new Array();
 var date = new Date();
 var lastTime = date.getTime();
 
-
-var bottomIdx= 239.5 ;
-
 function Piece () {
     this.bstart=0;
     this.bend=4;
 }
-
-
 
 function Block(x,y) {
     this.x = x;
@@ -89,32 +84,48 @@ Block.prototype.moveDown= function (){
 } 
 
 
-var pieceIdx=0;
 function addBlock(x,y) {
     blist.push(new Block(x, y));
-    pieceIdx = pieceIdx+1;
 }
 
-function buildSquarePiece(blist) {
-    var np = new Piece();
-    np.bstart = pieceIdx;
+var curPiece = new Piece();
+
+function buildSquarePiece() {
+    blist = new Array();
     addBlock(0,0);
     addBlock(1,0);
     addBlock(1,1);
     addBlock(0,1);
-    np.bend = pieceIdx; 
-    return np;
+    return curPiece;
+}
+
+function buildLogPiece() {
+    blist = new Array();
+    addBlock(0,0);
+    addBlock(0,1);
+    addBlock(0,2);
+    addBlock(0,3);
+    return curPiece;
+}
+
+var pieceIdx=0;
+function selectPiece() {
+   pieceIdx+=1;
+   if ((pieceIdx %2) ==0) { 
+      return buildLogPiece();
+   }
+   return buildSquarePiece();
 }
 
 var leftIdx= 0 ;
-var rightIdx= 8 ;
+var rightIdx= hs-1 ;
 
 function canMoveHorizontally(curPiece, idx) {
     var mod = 1;
     if (idx == leftIdx)
        mod =-1;
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       if (idx== blist[i].x || 1 == boardMatrix[blist[i].y][blist[i].x+mod]) {
+       if (idx== blist[i].x || null != boardMatrix[blist[i].y][blist[i].x+mod]) {
          return false;
        }
     }
@@ -130,7 +141,7 @@ function canMoveRight(curPiece) {
 
 function canMoveDown(curPiece) {
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       if (vs-1==  blist[i].y || 1 == boardMatrix[blist[i].y+1][blist[i].x]) {
+       if (vs-1==  blist[i].y || null != boardMatrix[blist[i].y+1][blist[i].x]) {
          return false;
        }
     }
@@ -150,14 +161,60 @@ var curPiece = buildSquarePiece(blist);
 
 function markBoard(curPiece){
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-	boardMatrix[blist[i].y][blist[i].x] = 1;
+	boardMatrix[blist[i].y][blist[i].x] =blist[i];
+	blist[i].obj.fillColor.hue +=15;
     }
 }
+var garbage =new Array();
+
+function clearCurrentRow(y) {
+      for (var x= 0; x < hs; x++) {
+         if (null !=boardMatrix[y][x]) {   
+          boardMatrix[y][x].obj.remove(); 
+          garbage.push(boardMatrix[y][x]);
+	  boardMatrix[y][x] =null ;
+         }
+      } 
+}
+
+function movePiecesDown(y) {
+   if (y == 0) {
+      clearCurrentRow(y);
+      return ;
+   }
+   for (var x= 0; x < hs; x++) {
+	boardMatrix[y][x] =boardMatrix[y-1][x];
+        if (null != boardMatrix[y][x]) 
+           boardMatrix[y][x].moveDown();
+        boardMatrix[y-1][x] = null;
+   } 
+   movePiecesDown(y-1);
+} 
+
 function rotateLine() {
 //    Each framesetcols, rotate the path by 3 degrees:
     path.rotate(rotationRate);
 //    path.fillColor.hue += 1;
 }
+function isRowComplete(y) {
+  for (var x= 0; x < hs; x++) {
+     if (null == boardMatrix[y][x] ) 
+        return false;
+  } 
+  return true;
+}
+function checkForCompleteRow(y) {
+   if (y < 0)
+     return ;
+   if (isRowComplete(y)) {
+        clearCurrentRow(y);
+	movePiecesDown(y);
+	checkForCompleteRow(y);
+   }
+   else {
+	checkForCompleteRow(y-1);
+   }
+} 
 var readKeyTimeout =  0;
 function onFrame(event) {
     rotateLine();
@@ -197,7 +254,8 @@ function onFrame(event) {
     if ((now - lastTime) > 1000) {
 	if (!canMoveDown(curPiece)) { 
 		markBoard(curPiece);
-		curPiece = buildSquarePiece(blist);
+		checkForCompleteRow(vs-1) ;
+		curPiece = selectPiece();
         }
         else { 
 	    movePieceDown(curPiece);
