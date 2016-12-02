@@ -109,28 +109,32 @@ function buildSquarePiece(blist) {
 var leftIdx= 0 ;
 var rightIdx= 8 ;
 
-function pieceToHor(curPiece, idx) {
+function canMoveHorizontally(curPiece, idx) {
+    var mod = 1;
+    if (idx == leftIdx)
+       mod =-1;
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       if (idx== blist[i].x) {
-         return true;
+       if (idx== blist[i].x || 1 == boardMatrix[blist[i].y][blist[i].x+mod]) {
+         return false;
        }
     }
-    return false;
+    return true;
 }
 
-function pieceToLeft(curPiece) {
-    return pieceToHor(curPiece, leftIdx);
+function canMoveLeft(curPiece) {
+    return canMoveHorizontally(curPiece, leftIdx);
 }
-function pieceToRight(curPiece) {
-    return pieceToHor(curPiece, rightIdx);
+function canMoveRight(curPiece) {
+    return canMoveHorizontally(curPiece, rightIdx);
 }
-function pieceToBottom(curPiece) {
+
+function canMoveDown(curPiece) {
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-       if (vs-1==  blist[i].y) {
-         return true;
+       if (vs-1==  blist[i].y || 1 == boardMatrix[blist[i].y+1][blist[i].x]) {
+         return false;
        }
     }
-    return false;
+    return true;
 }
 function movePieceHorrizontal(curPiece, q) {
     for (var i = curPiece.bstart; i < curPiece.bend; i++) {
@@ -144,6 +148,11 @@ function movePieceDown(curPiece) {
 }
 var curPiece = buildSquarePiece(blist);
 
+function markBoard(curPiece){
+    for (var i = curPiece.bstart; i < curPiece.bend; i++) {
+	boardMatrix[blist[i].y][blist[i].x] = 1;
+    }
+}
 function rotateLine() {
 //    Each framesetcols, rotate the path by 3 degrees:
     path.rotate(rotationRate);
@@ -168,25 +177,26 @@ function onFrame(event) {
     path.position = start;
 
     if (Key.isDown('d')) {
-	if (!pieceToRight(curPiece) && (now- readKeyTimeout) > 150) { 
+	if (canMoveRight(curPiece) && (now- readKeyTimeout) > 150) { 
 	    movePieceHorrizontal(curPiece, blockWidth);
 	    readKeyTimeout = now;
 	}
     }
     if (Key.isDown('a')) {
-	if (!pieceToLeft(curPiece) && (now- readKeyTimeout) > 150) {
+	if (canMoveLeft(curPiece) && (now- readKeyTimeout) > 150) {
 	    movePieceHorrizontal(curPiece, -blockWidth);
 	    readKeyTimeout = now;
 	} 
     }
     if (Key.isDown('s')) {
-	if (!pieceToBottom(curPiece) && (now- readKeyTimeout) > 150) {
+	if (canMoveDown(curPiece) && (now- readKeyTimeout) > 150) {
 	    movePieceDown(curPiece);
 	    readKeyTimeout = now;
 	} 
     }
     if ((now - lastTime) > 1000) {
-	if (pieceToBottom(curPiece)) { 
+	if (!canMoveDown(curPiece)) { 
+		markBoard(curPiece);
 		curPiece = buildSquarePiece(blist);
         }
         else { 
