@@ -42,7 +42,7 @@ path.moveTo(start);
 path.lineTo(start + [ 100, -50 ]);
 var rotationRate = 3;
 var blockWidth = 18; 
-var hs = 3;
+var hs = 9;
 var vs = 9*2;
 var boardMatrix = new Array();
 
@@ -90,14 +90,17 @@ function addBlock(x,y) {
 
 var curPiece = new Piece();
 
+var pieces = new Array();
+
 function buildSquarePiece() {
     blist = new Array();
     addBlock(0,0);
     addBlock(1,0);
-    addBlock(1,1);
     addBlock(0,1);
+    addBlock(1,1);
     return curPiece;
 }
+pieces.push(buildSquarePiece);
 
 function buildLogPiece() {
     blist = new Array();
@@ -107,14 +110,66 @@ function buildLogPiece() {
     addBlock(0,3);
     return curPiece;
 }
+pieces.push(buildLogPiece);
+function buildLZPiece() {
+    blist = new Array();
+    addBlock(0,1);
+    addBlock(1,1);
+    addBlock(1,0);
+    addBlock(2,0);
+    return curPiece;
+}
+pieces.push(buildLZPiece);
+function buildLEPiece() {
+    blist = new Array();
+    addBlock(0,0);
+    addBlock(0,1);
+    addBlock(1,1);
+    addBlock(2,1);
+    return curPiece;
+}
+pieces.push(buildLEPiece);
+function buildELPiece() {
+    blist = new Array();
+    addBlock(0,1);
+    addBlock(0,0);
+    addBlock(1,0);
+    addBlock(2,0);
+    return curPiece;
+}
+pieces.push(buildELPiece);
+function buildPyramidPiece() {
+    blist = new Array();
+    addBlock(0,1);
+    addBlock(1,0);
+    addBlock(1,1);
+    addBlock(2,1);
+    return curPiece;
+}
+pieces.push(buildPyramidPiece);
+
+function buildPyramidPiece() {
+    blist = new Array();
+    addBlock(0,1);
+    addBlock(1,0);
+    addBlock(1,1);
+    addBlock(2,1);
+    return curPiece;
+}
+function buildZPiece() {
+    blist = new Array();
+    addBlock(0,0);
+    addBlock(1,0);
+    addBlock(1,1);
+    addBlock(2,1);
+    return curPiece;
+}
+pieces.push(buildZPiece);
 
 var pieceIdx=0;
 function selectPiece() {
    pieceIdx+=1;
-   if ((pieceIdx %2) ==0) { 
-      return buildLogPiece();
-   }
-   return buildSquarePiece();
+   return  pieces[pieceIdx %pieces.length]();
 }
 
 var leftIdx= 0 ;
@@ -165,14 +220,11 @@ function markBoard(curPiece){
 	blist[i].obj.fillColor.hue +=15;
     }
 }
-var garbage =new Array();
 
 function clearCurrentRow(y) {
       for (var x= 0; x < hs; x++) {
          if (null !=boardMatrix[y][x]) {   
           boardMatrix[y][x].obj.remove(); 
-          garbage.push(boardMatrix[y][x]);
-	  boardMatrix[y][x] =null ;
          }
       } 
 }
