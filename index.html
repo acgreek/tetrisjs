@@ -12,13 +12,12 @@ body {
 canvas {
     background: #CCC;
     display: block;
-    position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    width: 100%;
-    height: 100%;
+    width: 100;
+    height: 400;
 
 }
     </style>
@@ -153,9 +152,12 @@ function canmove(ix, iy, dx, dy, mod) {
 } 
 
 function isLog(piece) {
-   var x= blist[0].x;
-   var y= blist[0].y;
-   return  null == findIf(blist, function (b) { if (b.x != x || b.y != y) return b; });
+	var x= blist[0].x;
+	var y= blist[0].y;
+	var hlog= true;
+	var vlog= true;
+	foreach(blist, function (b) { if (b.x != x) vlog =false;if (b.y != y) hlog =false });
+  return hlog || vlog
 }
 function rotateLogClockwise(piece) {
    var b =blist[0];
@@ -459,10 +461,25 @@ function onFrame(event) {
 }
         </script>
     </head>
-    <body>
-        <canvas id="myCanvas" resize></canvas> </canvas>
-	<input id='xCord' size=60> 
-	<input id='yCord' size=60> 
-    </body>
+		<body>
+		<table>
+		<tr>
+		<td rowspan='2'>
+		<canvas id="myCanvas" width="200" height="400"></canvas>
+		</td>
+		<td>
+
+		<form> 
+			X cord:<input id='xCord' size=60> 
+		</td>
+		</tr>
+		<tr>
+		<td>
+			Y cord:<input id='yCord' size=60> 
+		</form>
+		</td>
+		</tr>
+		</table>
+		</body>
 </html>
 
