@@ -63,6 +63,9 @@ function Piece () {
     this.bstart=0;
     this.bend=4;
 }
+Piece.prototype.getCenter = function (){
+    return 2;
+}
 
 function Block(x,y) {
     this.x = x;
@@ -82,7 +85,140 @@ Block.prototype.moveDown= function (){
 	this.y++;
 	this.obj.position.y+=blockWidth;
 } 
+Block.prototype.moveUp= function (){
+	this.y--;
+	this.obj.position.y-=blockWidth;
+} 
+Block.prototype.moveTo= function (x, y){
+	var diff = this.x - x;
+   
+        if (diff > 0) 
+           while (diff)  {
+              this.moveLeft();
+              diff--;
+           }
+        else 
+           while (diff != 0)  {
+              this.moveRight();
+              diff++;
+           }
+	diff = this.y - y;
+   
+        if (diff > 0) 
+           while (diff)  {
+              this.moveUp();
+              diff--;
+           }
+        else 
+           while (diff != 0)  {
+              this.moveDown();
+              diff++;
+           }
 
+} 
+
+function findIf(list, func) {
+    for (var i = 0; i < list.length; i++) {
+        if (true ==func(list[i])) 
+          return list[i];
+    }
+    return null;
+}
+function foreach(list, func) {
+    for (var i = 0; i < list.length; i++) {
+        func(list[i]) ;
+    }
+}
+function Mod (b, dx, dy) {
+   this.blockp = b;
+   this.nx = dx;
+   this.ny = dy;
+}
+ 
+
+function canmove(ix, iy, dx, dy, mod) {
+   if (dy < 0 || dy > vs-1) 
+     return false;
+   var findBlock = function (b) { 
+     return b.x == ix && b.y == iy; 
+   };
+   var piece = findIf(blist,findBlock );
+   if (null ==piece)  
+     return true;
+   if (boardMatrix[dy][dx] == null) {
+     mod.push(new Mod(piece, dx, dy));
+     return true;
+   }
+   return false;
+} 
+
+function isLog(piece) {
+   var x= blist[0].x;
+   var y= blist[0].y;
+   return  null == findIf(blist, function (b) { if (b.x != x || b.y != y) return b; });
+}
+function rotateLogClockwise(piece) {
+   var b =blist[0];
+   if (blist[0].y == blist[1].y) { 
+	   if (b.y > 0 && null != boardMatrix[b.y-1][b.x+1]){
+		   return;
+	   }
+	   if (b.y + 2 > vs || null != boardMatrix[b.y+1][b.x+1]) {
+		   return;
+	   }
+	   if (null != boardMatrix[b.y+2][b.x+1]) {
+		   return;
+	   }
+	   blist[0].moveRight();
+	   blist[0].moveUp();
+	   blist[2].moveLeft();
+	   blist[2].moveDown();
+	   blist[3].moveLeft();
+	   blist[3].moveLeft();
+	   blist[3].moveDown();
+	   blist[3].moveDown();
+   }
+   else  {
+                if (b.x == 0 || null != boardMatrix[b.y+1][b.x-1]) {
+                    return;
+                }
+                if (b.x+2 > vs || null != boardMatrix[b.y+1][b.x+1]) {
+                    return;
+                }
+                if (null != boardMatrix[b.x+2][b.y+1]) {
+                    return;
+                }
+                blist[0].moveLeft();
+                blist[0].moveDown();
+                blist[2].moveRight() ;
+                blist[2].moveUp();
+                blist[3].moveRight();
+                blist[3].moveRight();
+                blist[3].moveUp();
+                blist[3].moveUp();
+   }
+
+}
+function rotateClockwise(piece) {
+   if (isLog(piece)) {
+     rotateLogClockwise(piece);
+     return;
+   }
+   var cx = blist[piece.getCenter()].x;
+   var cy = blist[piece.getCenter()].y;
+   var modifications = new Array(); 
+   if (canmove(cx-1,cy-1,cx+1,cy-1,modifications) &&
+        canmove(cx,cy-1,cx+1,cy,modifications) &&
+        canmove(cx+1,cy-1,cx+1,cy+1,modifications) &&
+        canmove(cx+1,cy,cx,cy+1,modifications) &&
+        canmove(cx+1,cy+1,cx-1,cy+1,modifications) &&
+        canmove(cx,cy+1,cx-1,cy,modifications) &&
+        canmove(cx-1,cy+1,cx-1,cy-1,modifications) &&
+        canmove(cx-1,cy,cx,cy-1,modifications)) {
+      foreach(modifications,function (m) {m.blockp.moveTo(m.nx, m.ny); });
+   }
+
+} 
 
 function addBlock(x,y) {
     blist.push(new Block(x, y));
@@ -105,9 +241,9 @@ pieces.push(buildSquarePiece);
 function buildLogPiece() {
     blist = new Array();
     addBlock(0,0);
-    addBlock(0,1);
-    addBlock(0,2);
-    addBlock(0,3);
+    addBlock(1,0);
+    addBlock(2,0);
+    addBlock(3,0);
     return curPiece;
 }
 pieces.push(buildLogPiece);
@@ -294,6 +430,12 @@ function onFrame(event) {
     if (Key.isDown('a')) {
 	if (canMoveLeft(curPiece) && (now- readKeyTimeout) > 150) {
 	    movePieceHorrizontal(curPiece, -blockWidth);
+	    readKeyTimeout = now;
+	} 
+    }
+    if (Key.isDown('c')) {
+	if ((now- readKeyTimeout) > 150) {
+            rotateClockwise(curPiece);
 	    readKeyTimeout = now;
 	} 
     }
