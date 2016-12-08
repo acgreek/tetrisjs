@@ -156,7 +156,7 @@ function isLog(piece) {
 	foreach(blist, function (b) { if (b.x != x) vlog =false;if (b.y != y) hlog =false });
 	return hlog || vlog
 }
-function rotateLogClockwise(piece) {
+Piece.prototype.rotateLogClockwise = function() {
 	var b =blist[0];
 	if (blist[0].y == blist[1].y) { 
 		if (b.y > 0 && null != boardMatrix[b.y-1][b.x+1]){
@@ -198,13 +198,13 @@ function rotateLogClockwise(piece) {
 	}
 
 }
-function rotateClockwise(piece) {
-	if (isLog(piece)) {
-		rotateLogClockwise(piece);
+Piece.prototype.rotateClockwise = function() {
+	if (isLog(this)) {
+		this.rotateLogClockwise();
 		return;
 	}
-	var cx = blist[piece.getCenter()].x;
-	var cy = blist[piece.getCenter()].y;
+	var cx = blist[this.getCenter()].x;
+	var cy = blist[this.getCenter()].y;
 	var modifications = new Array(); 
 	if (canmove(cx-1,cy-1,cx+1,cy-1,modifications) &&
 			canmove(cx,cy-1,cx+1,cy,modifications) &&
@@ -434,7 +434,7 @@ function onFrame(event) {
 	}
 	if (Key.isDown('c')) {
 		if ((now- readKeyTimeout) > 150) {
-			rotateClockwise(curPiece);
+			curPiece.rotateClockwise();
 			readKeyTimeout = now;
 		} 
 	}
