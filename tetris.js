@@ -1,30 +1,17 @@
 document.getElementById("myCanvas").style.background = 'black';
-// Create a Paper.js Path to draw a line into it:
-var path = new Path();
-// Give the stroke a color
-path.strokeColor = 'red';
-var x = 300;
-var y = 100;
-var start = new Point(x, y);
-// Move to start and draw a line from there
-path.moveTo(start);
-// Note the plus operator on Point objects.
-// PaperScript does that for us, and much more!
-path.lineTo(start + [ 100, -50 ]);
-var rotationRate = 3;
-var blockWidth = 18; 
-var hs = 9;
-var vs = 9*2;
+var gameSize = { x: 9, y: 9* 2}; 
 var boardMatrix = new Array();
 
-for (var i =0; i < vs; i ++ ) {
+for (var i =0; i < gameSize.y; i ++ ) {
 	boardMatrix[i] = new Array();
-	for (var j =0; j < hs; j ++ ) {
+	for (var j =0; j < gameSize.x; j ++ ) {
 		boardMatrix[i][j] = null;
 	}
 } 
 
-var gameBoard = new Path.Rectangle(10,1, blockWidth*hs,blockWidth*vs);
+var path = new Path();
+var blockWidth = 18; 
+var gameBoard = new Path.Rectangle(10,1, blockWidth*gameSize.x,blockWidth*gameSize.y);
 gameBoard.fillColor = 'white';
 var blist = new Array();
 var date = new Date();
@@ -106,7 +93,7 @@ function Mod (b, dx, dy) {
 
 
 function canmove(ix, iy, dx, dy, mod) {
-	if (dy < 0 || dy > vs-1) 
+	if (dy < 0 || dy > gameSize.y-1) 
 		return false;
 	var findBlock = function (b) { 
 		return b.x == ix && b.y == iy; 
@@ -135,7 +122,7 @@ Piece.prototype.rotateLogClockwise = function() {
 		if (b.y > 0 && null != boardMatrix[b.y-1][b.x+1]){
 			return;
 		}
-		if (b.y + 2 > vs || null != boardMatrix[b.y+1][b.x+1]) {
+		if (b.y + 2 > gameSize.y || null != boardMatrix[b.y+1][b.x+1]) {
 			return;
 		}
 		if (null != boardMatrix[b.y+2][b.x+1]) {
@@ -154,7 +141,7 @@ Piece.prototype.rotateLogClockwise = function() {
 		if (b.x == 0 || null != boardMatrix[b.y+1][b.x-1]) {
 			return;
 		}
-		if (b.x+2 > vs || null != boardMatrix[b.y+1][b.x+1]) {
+		if (b.x+2 > gameSize.y || null != boardMatrix[b.y+1][b.x+1]) {
 			return;
 		}
 		if (null != boardMatrix[b.x+2][b.y+1]) {
@@ -281,7 +268,7 @@ function selectPiece() {
 }
 
 var leftIdx= 0 ;
-var rightIdx= hs-1 ;
+var rightIdx= gameSize.x-1 ;
 
 function canMoveHorizontally(curPiece, idx) {
 	var mod = 1;
@@ -304,7 +291,7 @@ function canMoveRight(curPiece) {
 
 function canMoveDown(curPiece) {
 	for (var i = curPiece.bstart; i < curPiece.bend; i++) {
-		if (vs-1==  blist[i].y || null != boardMatrix[blist[i].y+1][blist[i].x]) {
+		if (gameSize.y-1==  blist[i].y || null != boardMatrix[blist[i].y+1][blist[i].x]) {
 			return false;
 		}
 	}
@@ -330,7 +317,7 @@ function markBoard(curPiece){
 }
 
 function clearCurrentRow(y) {
-	for (var x= 0; x < hs; x++) {
+	for (var x= 0; x < gameSize.x; x++) {
 		if (null !=boardMatrix[y][x]) {   
 			boardMatrix[y][x].obj.remove(); 
 		}
@@ -342,7 +329,7 @@ function movePiecesDown(y) {
 		clearCurrentRow(y);
 		return ;
 	}
-	for (var x= 0; x < hs; x++) {
+	for (var x= 0; x < gameSize.x; x++) {
 		boardMatrix[y][x] =boardMatrix[y-1][x];
 		if (null != boardMatrix[y][x]) 
 			boardMatrix[y][x].moveDown();
@@ -351,13 +338,8 @@ function movePiecesDown(y) {
 	movePiecesDown(y-1);
 } 
 
-function rotateLine() {
-	//    Each framesetcols, rotate the path by 3 degrees:
-	path.rotate(rotationRate);
-	//    path.fillColor.hue += 1;
-}
 function isRowComplete(y) {
-	for (var x= 0; x < hs; x++) {
+	for (var x= 0; x < gameSize.x; x++) {
 		if (null == boardMatrix[y][x] ) 
 			return false;
 	} 
@@ -377,21 +359,9 @@ function checkForCompleteRow(y) {
 } 
 var readKeyTimeout =  0;
 function onFrame(event) {
-	rotateLine();
 
 	date = new Date();
 	var now = date.getTime();
-
-	if (Key.isDown('q')) {
-		x =  x-1;
-	}
-	if (Key.isDown('w')) {
-		x =  x+1;
-	}
-	document.getElementById('xCord').value = x;
-	document.getElementById('yCord').value = y;
-	start = new Point(x, y);
-	path.position = start;
 
 	if (Key.isDown('d')) {
 		if (canMoveRight(curPiece) && (now- readKeyTimeout) > 150) { 
@@ -420,7 +390,7 @@ function onFrame(event) {
 	if ((now - lastTime) > 1000) {
 		if (!canMoveDown(curPiece)) { 
 			markBoard(curPiece);
-			checkForCompleteRow(vs-1) ;
+			checkForCompleteRow(gameSize.y-1) ;
 			curPiece = selectPiece();
 		}
 		else { 
