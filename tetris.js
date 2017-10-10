@@ -1,4 +1,6 @@
 document.getElementById("myCanvas").style.background = 'black';
+var ScoreElement = document.getElementById("Score");
+
 var gameSize = { x: 9, y: 9* 2}; 
 var boardMatrix = new Array();
 
@@ -14,8 +16,6 @@ var blockWidth = 18;
 var gameBoard = new Path.Rectangle(10,1, blockWidth*gameSize.x,blockWidth*gameSize.y);
 gameBoard.fillColor = 'white';
 var blist = new Array();
-var date = new Date();
-var lastTime = date.getTime();
 
 function Piece () {
 	this.bstart=0;
@@ -347,19 +347,22 @@ function isRowComplete(y) {
 }
 function checkForCompleteRow(y) {
 	if (y < 0)
-		return ;
+		return 0;
 	if (isRowComplete(y)) {
 		clearCurrentRow(y);
 		movePiecesDown(y);
-		checkForCompleteRow(y);
+		return 10 + checkForCompleteRow(y);
 	}
-	else {
-		checkForCompleteRow(y-1);
-	}
+	return checkForCompleteRow(y-1);
 } 
-var readKeyTimeout =  0;
-function onFrame(event) {
+var score = 0;
+ScoreElement.value = score;
 
+var date = new Date();
+var lastTime = date.getTime();
+var readKeyTimeout =  0;
+
+function onFrame(event) {
 	date = new Date();
 	var now = date.getTime();
 
@@ -390,7 +393,8 @@ function onFrame(event) {
 	if ((now - lastTime) > 1000) {
 		if (!canMoveDown(curPiece)) { 
 			markBoard(curPiece);
-			checkForCompleteRow(gameSize.y-1) ;
+			score += checkForCompleteRow(gameSize.y-1) ;
+			ScoreElement.value = score;
 			curPiece = selectPiece();
 		}
 		else { 
